@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  background-color: #111;
+  color: white;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+}
+
+#game {
+  text-align: center;
+  margin-top: 40px;
+  padding: 20px;
+  border: 3px solid gold;
+  width: 320px;
+}
+
+/* GLOWING GOLD TITLE */
+h1 {
+  color: gold;
+  border-bottom: 2px solid gold;
+  padding-bottom: 10px;
+  text-shadow:
+    0 0 5px gold,
+    0 0 10px gold,
+    0 0 20px orange;
+}
+
+#moneyBox, #slotsBox, #legend, #achievementsBox {
+  border: 2px solid gold;
+  padding: 10px;
+  margin-top: 15px;
+}
+
+#slots {
+  font-size: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  height: 50px;
+  overflow: hidden;
+}
+
+/* REELS DO NOT MOVE BY DEFAULT */
+.reel {
+  display: inline-block;
+}
+
+/* REELS MOVE ONLY WHEN SPINNING */
+.spinning {
+  animation: spin 0.2s linear infinite;
+}
+
+button {
+  font-size: 20px;
+  padding: 10px 20px;
+  margin-top: 15px;
+  cursor: pointer;
+  border: 2px solid gold;
+  background: black;
+  color: gold;
+}
+
+.win {
+  color: gold;
+  font-size: 22px;
+  animation: flash 0.5s infinite;
+}
+
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* UP & DOWN SPIN MOTION */
+@keyframes spin {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+.locked {
+  color: gray;
+}
+
+.unlocked {
+  color: lightgreen;
+}
+
+.dropdown {
+  cursor: pointer;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<h1>🎰 Boah's Slot Machine 🎰</h1>
+
+<div id="moneyBox">
+Money: $<span id="money">0</span>
+</div>
+
+<div id="slotsBox">
+  <div id="slots">
+    <span id="r1" class="reel">❓</span>
+    <span id="r2" class="reel">❓</span>
+    <span id="r3" class="reel">❓</span>
+  </div>
+</div>
+
+<button onclick="spin()">SPIN</button>
+
+<p id="message"></p>
+
+<div id="legend">
+<h3>Legend</h3>
+<p>🔔 🔔 🔔 = Small Win (+$10)</p>
+<p>⭐ ⭐ ⭐ = Big Win (+$25)</p>
+<p>💎 💎 💎 = JACKPOT (+$50)</p>
+</div>
+
+<div id="achievementsBox">
+<p class="dropdown" onclick="toggleAchievements()">🏆 Achievements ▼</p>
+<div id="achievements" style="display:none;">
+  <p id="a_spin" class="locked">🔒 First Spin</p>
+  <p id="a_win" class="locked">🔒 First Win</p>
+  <p id="a_jackpot" class="locked">🔒 Jackpot!</p>
+  <p id="a_100" class="locked">🔒 $100 Money</p>
+</div>
+</div>
+
+</div>
+
+<!-- SOUNDS -->
+<audio id="spinSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="jackpotSound" src="https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg"></audio>
+
+<script>
+let symbols = ["🍒", "🍋", "🍇", "🔔", "⭐", "💎"];
+let spinning = false;
+
+// LOAD MONEY
+let money = Number(localStorage.getItem("money")) || 0;
+document.getElementById("money").textContent = money;
+
+// LOAD ACHIEVEMENTS
+let achievements = JSON.parse(localStorage.getItem("achievements")) || {
+  spin: false,
+  win: false,
+  jackpot: false,
+  hundred: false
+};
+updateAchievements();
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+
+  unlock("spin");
+  document.getElementById("spinSound").play();
+
+  let r1 = document.getElementById("r1");
+  let r2 = document.getElementById("r2");
+  let r3 = document.getElementById("r3");
+
+  /* TURN ON REEL MOVEMENT */
+  r1.classList.add("spinning");
+  r2.classList.add("spinning");
+  r3.classList.add("spinning");
+
+  let spins = 0;
+
+  let interval = setInterval(function () {
+    r1.textContent = randomSymbol();
+    r2.textContent = randomSymbol();
+    r3.textContent = randomSymbol();
+
+    spins++;
+
+    if (spins > 15) {
+      clearInterval(interval);
+
+      /* TURN OFF REEL MOVEMENT */
+      r1.classList.remove("spinning");
+      r2.classList.remove("spinning");
+      r3.classList.remove("spinning");
+
+      checkWin(r1.textContent, r2.textContent, r3.textContent);
+      spinning = false;
+    }
+  }, 100);
+}
+
+function randomSymbol() {
+  return symbols[Math.floor(Math.random() * symbols.length)];
+}
+
+function checkWin(one, two, three) {
+  let msg = document.getElementById("message");
+  msg.className = "";
+
+  if (one === "💎" && two === "💎" && three === "💎") {
+    money += 50;
+    msg.textContent = "💎 JACKPOT! +$50";
+    msg.className = "win";
+    unlock("win");
+    unlock("jackpot");
+    document.getElementById("jackpotSound").play();
+
+  } else if (one === "⭐" && two === "⭐" && three === "⭐") {
+    money += 25;
+    msg.textContent = "⭐ BIG WIN! +$25";
+    msg.className = "win";
+    unlock("win");
+    document.getElementById("winSound").play();
+
+  } else if (one === "🔔" && two === "🔔" && three === "🔔") {
+    money += 10;
+    msg.textContent = "🔔 Small Win +$10";
+    msg.className = "win";
+    unlock("win");
+    document.getElementById("winSound").play();
+
+  } else {
+    msg.textContent = "Try again";
+  }
+
+  if (money >= 100) unlock("hundred");
+
+  document.getElementById("money").textContent = money;
+  localStorage.setItem("money", money);
+}
+
+function unlock(name) {
+  if (achievements[name]) return;
+  achievements[name] = true;
+  localStorage.setItem("achievements", JSON.stringify(achievements));
+  updateAchievements();
+}
+
+function updateAchievements() {
+  setAch("spin", "a_spin", "First Spin");
+  setAch("win", "a_win", "First Win");
+  setAch("jackpot", "a_jackpot", "Jackpot!");
+  setAch("hundred", "a_100", "$100 Money");
+}
+
+function setAch(key, id, text) {
+  let el = document.getElementById(id);
+  if (achievements[key]) {
+    el.textContent = "🏆 " + text;
+    el.className = "unlocked";
+  }
+}
+
+function toggleAchievements() {
+  let box = document.getElementById("achievements");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+</script>
+
+</body>
+</html>
