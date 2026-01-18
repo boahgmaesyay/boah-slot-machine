@@ -1,273 +1,291 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slot Machine</title>
+
 <style>
-body {
-  background-color: #111;
-  color: white;
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
+body{
+  background:radial-gradient(circle at top,#222,#000);
+  color:white;
+  font-family:system-ui,Arial;
+  text-align:center;
+  margin:0;padding:10px
 }
-
-#game {
-  text-align: center;
-  margin-top: 40px;
-  padding: 20px;
-  border: 3px solid gold;
-  width: 320px;
+h1{
+  color:gold;
+  text-shadow:0 0 20px gold;
+  animation:float 6s ease-in-out infinite
 }
-
-/* GLOWING GOLD TITLE */
-h1 {
-  color: gold;
-  border-bottom: 2px solid gold;
-  padding-bottom: 10px;
-  text-shadow:
-    0 0 5px gold,
-    0 0 10px gold,
-    0 0 20px orange;
+@keyframes float{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+  100%{transform:translateY(0)}
 }
-
-#moneyBox, #slotsBox, #legend, #achievementsBox {
-  border: 2px solid gold;
-  padding: 10px;
-  margin-top: 15px;
+.panel{
+  background:rgba(255,255,255,.06);
+  border:2px solid rgba(255,215,0,.6);
+  border-radius:20px;
+  padding:15px;
+  margin:15px auto;
+  max-width:380px;
+  box-shadow:0 0 20px rgba(255,215,0,.2)
 }
-
-#slots {
-  font-size: 40px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  height: 50px;
-  overflow: hidden;
+.reels{
+  font-size:48px;
+  display:flex;
+  justify-content:space-around;
+  height:60px;
+  overflow:hidden
 }
-
-/* REELS DO NOT MOVE BY DEFAULT */
-.reel {
-  display: inline-block;
+.reel.spin{animation:spin .15s linear infinite}
+@keyframes spin{
+  0%{transform:translateY(0)}
+  100%{transform:translateY(-50px)}
 }
-
-/* REELS MOVE ONLY WHEN SPINNING */
-.spinning {
-  animation: spin 0.2s linear infinite;
+button{
+  background:linear-gradient(135deg,gold,#ffb700);
+  border:none;border-radius:999px;
+  padding:10px 16px;
+  font-size:15px;
+  cursor:pointer;
+  margin:4px
 }
-
-button {
-  font-size: 20px;
-  padding: 10px 20px;
-  margin-top: 15px;
-  cursor: pointer;
-  border: 2px solid gold;
-  background: black;
-  color: gold;
+details{
+  background:rgba(0,0,0,.4);
+  border-radius:16px;
+  padding:10px
 }
-
-.win {
-  color: gold;
-  font-size: 22px;
-  animation: flash 0.5s infinite;
+summary{color:gold;font-weight:bold;cursor:pointer}
+.item{
+  display:inline-block;
+  margin:4px;
+  position:relative
 }
-
-@keyframes flash {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
+.item:hover::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:120%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  color:white;
+  border:2px solid gold;
+  border-radius:10px;
+  padding:6px 8px;
+  white-space:pre-line;
+  font-size:12px;
+  box-shadow:0 0 10px gold;
+  z-index:10;
+  width:max-content;
+  max-width:220px
 }
-
-/* UP & DOWN SPIN MOTION */
-@keyframes spin {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0); }
+#popup{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center
 }
-
-.locked {
-  color: gray;
+#popupBox{
+  background:#111;
+  border:3px solid gold;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 0 30px gold
 }
-
-.unlocked {
-  color: lightgreen;
-}
-
-.dropdown {
-  cursor: pointer;
-  font-weight: bold;
+.small{
+  font-size:12px;
+  opacity:.7
 }
 </style>
 </head>
 
 <body>
 
-<div id="game">
+<h1>🎰 SLOT MACHINE 🎰</h1>
 
-<h1>🎰 Boah's Slot Machine 🎰</h1>
+<div class="panel">💰 Money: $<span id="money">0</span></div>
 
-<div id="moneyBox">
-Money: $<span id="money">0</span>
+<div class="panel">
+  <div class="reels">
+    <span class="reel" id="r1">🍒</span>
+    <span class="reel" id="r2">🍋</span>
+    <span class="reel" id="r3">🍇</span>
+  </div>
+  <button onclick="spin()">SPIN</button>
 </div>
 
-<div id="slotsBox">
-  <div id="slots">
-    <span id="r1" class="reel">❓</span>
-    <span id="r2" class="reel">❓</span>
-    <span id="r3" class="reel">❓</span>
+<div class="panel">
+<details>
+<summary>🏪 Luxury Store</summary>
+<div id="store"></div>
+</details>
+</div>
+
+<div class="panel">
+<details>
+<summary>🏆 Achievements</summary>
+<div id="achievements"></div>
+</details>
+</div>
+
+<div class="panel">
+<button onclick="resetSave()">🧹 Reset Save (Fix Bugs)</button>
+<p class="small">Only resets this game’s progress</p>
+</div>
+
+<div id="popup">
+  <div id="popupBox">
+    <p id="popupText"></p>
+    <button onclick="closePopup()">OK</button>
   </div>
 </div>
 
-<button onclick="spin()">SPIN</button>
-
-<p id="message"></p>
-
-<div id="legend">
-<h3>Legend</h3>
-<p>🔔 🔔 🔔 = Small Win (+$10)</p>
-<p>⭐ ⭐ ⭐ = Big Win (+$25)</p>
-<p>💎 💎 💎 = JACKPOT (+$50)</p>
-</div>
-
-<div id="achievementsBox">
-<p class="dropdown" onclick="toggleAchievements()">🏆 Achievements ▼</p>
-<div id="achievements" style="display:none;">
-  <p id="a_spin" class="locked">🔒 First Spin</p>
-  <p id="a_win" class="locked">🔒 First Win</p>
-  <p id="a_jackpot" class="locked">🔒 Jackpot!</p>
-  <p id="a_100" class="locked">🔒 $100 Money</p>
-</div>
-</div>
-
-</div>
-
-<!-- SOUNDS -->
-<audio id="spinSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="jackpotSound" src="https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg"></audio>
+<audio id="spinSound" src="https://actions.google.com/sounds/v1/foley/cloth_swipe.ogg"></audio>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/impacts/wood_plank_flicks.ogg"></audio>
+<audio id="jackpotSound" src="https://actions.google.com/sounds/v1/impacts/heavy_metal_impact.ogg"></audio>
 
 <script>
-let symbols = ["🍒", "🍋", "🍇", "🔔", "⭐", "💎"];
-let spinning = false;
+const symbols=["🍒","🍋","🍇","🔔","⭐","💎"];
+let money=0,spins=0,jackpots=0;
 
-// LOAD MONEY
-let money = Number(localStorage.getItem("money")) || 0;
-document.getElementById("money").textContent = money;
-
-// LOAD ACHIEVEMENTS
-let achievements = JSON.parse(localStorage.getItem("achievements")) || {
-  spin: false,
-  win: false,
-  jackpot: false,
-  hundred: false
+const shopItems={
+ lucky:{name:"🍀 Lucky Coin",price:100,desc:"More ⭐ symbols"},
+ gem:{name:"💎 Royal Gem",price:200,desc:"More 💎 symbols"},
+ watch:{name:"⌚ Diamond Watch",price:300,desc:"+10% money"},
+ wallet:{name:"🪙 Golden Wallet",price:2000,desc:"+20% money"},
+ crown:{name:"👑 Casino Crown",price:5000,desc:"+5% ALL money"}
 };
-updateAchievements();
 
-function spin() {
-  if (spinning) return;
-  spinning = true;
+let boosts={};
+Object.keys(shopItems).forEach(k=>boosts[k]=false);
 
-  unlock("spin");
-  document.getElementById("spinSound").play();
+let achievements=[
+ {name:"🎰 Gambler I",goal:25,reward:100,type:"spins"},
+ {name:"🎰 Gambler II",goal:100,reward:400,type:"spins"},
+ {name:"🎰 Gambler III",goal:500,reward:2000,type:"spins"},
+ {name:"💰 High Roller I",goal:1000,reward:500,type:"money"},
+ {name:"💰 High Roller II",goal:10000,reward:3000,type:"money"},
+ {name:"💎 Diamond Hands I",goal:5,reward:500,type:"jackpots"},
+ {name:"💎 Diamond Hands II",goal:25,reward:3000,type:"jackpots"}
+].map(a=>({...a,done:false}));
 
-  let r1 = document.getElementById("r1");
-  let r2 = document.getElementById("r2");
-  let r3 = document.getElementById("r3");
+const r1=document.getElementById("r1"),
+r2=document.getElementById("r2"),
+r3=document.getElementById("r3"),
+moneyEl=document.getElementById("money"),
+storeEl=document.getElementById("store"),
+achEl=document.getElementById("achievements");
 
-  /* TURN ON REEL MOVEMENT */
-  r1.classList.add("spinning");
-  r2.classList.add("spinning");
-  r3.classList.add("spinning");
+function popup(m){popupText.textContent=m;popup.style.display="flex"}
+function closePopup(){popup.style.display="none"}
 
-  let spins = 0;
-
-  let interval = setInterval(function () {
-    r1.textContent = randomSymbol();
-    r2.textContent = randomSymbol();
-    r3.textContent = randomSymbol();
-
-    spins++;
-
-    if (spins > 15) {
-      clearInterval(interval);
-
-      /* TURN OFF REEL MOVEMENT */
-      r1.classList.remove("spinning");
-      r2.classList.remove("spinning");
-      r3.classList.remove("spinning");
-
-      checkWin(r1.textContent, r2.textContent, r3.textContent);
-      spinning = false;
-    }
-  }, 100);
+function resetSave(){
+ localStorage.removeItem("slotSave");
+ location.reload();
 }
 
-function randomSymbol() {
-  return symbols[Math.floor(Math.random() * symbols.length)];
+function save(){
+ localStorage.setItem("slotSave",JSON.stringify({money,spins,jackpots,boosts,achievements}))
+}
+function load(){
+ const d=JSON.parse(localStorage.getItem("slotSave"));
+ if(!d)return;
+ money=d.money||0;
+ spins=d.spins||0;
+ jackpots=d.jackpots||0;
+ boosts=d.boosts||boosts;
+ achievements=d.achievements||achievements;
 }
 
-function checkWin(one, two, three) {
-  let msg = document.getElementById("message");
-  msg.className = "";
+function getSymbol(){
+ let pool=[...symbols];
+ if(boosts.lucky)pool.push("⭐");
+ if(boosts.gem)pool.push("💎");
+ return pool[Math.floor(Math.random()*pool.length)]
+}
 
-  if (one === "💎" && two === "💎" && three === "💎") {
-    money += 50;
-    msg.textContent = "💎 JACKPOT! +$50";
-    msg.className = "win";
-    unlock("win");
-    unlock("jackpot");
-    document.getElementById("jackpotSound").play();
+function spin(){
+ spins++;
+ spinSound.play();
+ [r1,r2,r3].forEach(r=>r.classList.add("spin"));
+ setTimeout(()=>{
+  [r1,r2,r3].forEach(r=>r.classList.remove("spin"));
+  r1.textContent=getSymbol();
+  r2.textContent=getSymbol();
+  r3.textContent=getSymbol();
 
-  } else if (one === "⭐" && two === "⭐" && three === "⭐") {
-    money += 25;
-    msg.textContent = "⭐ BIG WIN! +$25";
-    msg.className = "win";
-    unlock("win");
-    document.getElementById("winSound").play();
+  if(r1.textContent===r2.textContent&&r2.textContent===r3.textContent){
+   let win=10;
+   if(r1.textContent==="⭐")win=25;
+   if(r1.textContent==="💎"){win=50;jackpots++;jackpotSound.play()}
+   else winSound.play();
 
-  } else if (one === "🔔" && two === "🔔" && three === "🔔") {
-    money += 10;
-    msg.textContent = "🔔 Small Win +$10";
-    msg.className = "win";
-    unlock("win");
-    document.getElementById("winSound").play();
+   if(boosts.watch)win*=1.1;
+   if(boosts.wallet)win*=1.2;
+   if(boosts.crown)win*=1.05;
 
-  } else {
-    msg.textContent = "Try again";
+   money+=Math.floor(win);
+   popup("🎉 WIN +$"+Math.floor(win))
   }
-
-  if (money >= 100) unlock("hundred");
-
-  document.getElementById("money").textContent = money;
-  localStorage.setItem("money", money);
+  update();
+ },700)
 }
 
-function unlock(name) {
-  if (achievements[name]) return;
-  achievements[name] = true;
-  localStorage.setItem("achievements", JSON.stringify(achievements));
-  updateAchievements();
+function buyItem(k){
+ const i=shopItems[k];
+ if(boosts[k])return popup("Already owned!");
+ if(money<i.price)return popup("Not enough money!");
+ money-=i.price;
+ boosts[k]=true;
+ popup("Purchased "+i.name+"!");
+ update();
 }
 
-function updateAchievements() {
-  setAch("spin", "a_spin", "First Spin");
-  setAch("win", "a_win", "First Win");
-  setAch("jackpot", "a_jackpot", "Jackpot!");
-  setAch("hundred", "a_100", "$100 Money");
-}
-
-function setAch(key, id, text) {
-  let el = document.getElementById(id);
-  if (achievements[key]) {
-    el.textContent = "🏆 " + text;
-    el.className = "unlocked";
+function update(){
+ moneyEl.textContent=Math.floor(money);
+ renderStore();
+ achievements.forEach(a=>{
+  const v=a.type==="spins"?spins:
+           a.type==="money"?money:
+           jackpots;
+  if(!a.done&&v>=a.goal){
+   a.done=true;
+   money+=a.reward;
+   popup("🏆 "+a.name+" +$"+a.reward)
   }
+ });
+ renderAchievements();
+ save();
 }
 
-function toggleAchievements() {
-  let box = document.getElementById("achievements");
-  box.style.display = box.style.display === "none" ? "block" : "none";
+function renderStore(){
+ storeEl.innerHTML="";
+ for(const k in shopItems){
+  const i=shopItems[k];
+  storeEl.innerHTML+=`
+   <span class="item" data-tip="${i.desc}">
+    <button onclick="buyItem('${k}')">
+     ${boosts[k]?"✅":"🛒"} ${i.name} ($${i.price})
+    </button>
+   </span><br>`;
+ }
 }
+
+function renderAchievements(){
+ achEl.innerHTML="";
+ achievements.forEach(a=>{
+  achEl.innerHTML+=`
+   <div class="item" data-tip="Goal: ${a.goal}\nReward: $${a.reward}">
+    ${a.done?"✅":"⬜"} ${a.name}
+   </div>`;
+ })
+}
+
+load();
+update();
 </script>
 
 </body>
 </html>
+
